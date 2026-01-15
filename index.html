@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 性格分析網站：NotebookLM 研究工具包</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --secondary: #0f172a;
+            --accent: #10b981;
+            --bg: #f1f5f9;
+            --card-bg: #ffffff;
+            --text: #334155;
+            --text-light: #64748b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            padding-bottom: 50px;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--secondary) 0%, #334155 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            margin-bottom: 40px;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            font-size: 1.1rem;
+            color: #cbd5e1;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Section Styles */
+        .section {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e2e8f0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f1f5f9;
+            flex-wrap: wrap; /* Allow wrapping for buttons */
+        }
+
+        .section-badge {
+            background: var(--primary);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+
+        .section-title h2 {
+            font-size: 1.5rem;
+            color: var(--secondary);
+        }
+
+        .section-title p {
+            font-size: 0.95rem;
+            color: var(--text-light);
+        }
+
+        /* Keyword Cards Grid */
+        .grid-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .keyword-group {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .keyword-group h3 {
+            font-size: 1.1rem;
+            color: var(--primary-dark);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Copy Row Styles */
+        .copy-row {
+            display: flex;
+            align-items: flex-start; /* Changed to start for multi-line text */
+            gap: 10px;
+            margin-bottom: 15px;
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s;
+            cursor: pointer; /* Suggest clickable */
+        }
+
+        .copy-row:hover {
+            border-color: var(--primary);
+            box-shadow: 0 2px 4px rgba(37, 99, 235, 0.1);
+            background-color: #f0f9ff;
+        }
+
+        /* Checkbox styling */
+        .keyword-checkbox {
+            margin-top: 5px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: var(--primary);
+            flex-shrink: 0;
+        }
+
+        .prompt-text {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            color: #334155;
+            flex-grow: 1;
+            word-break: break-word;
+            padding-top: 3px; /* Align with checkbox */
+        }
+
+        /* Legacy Button for non-checkbox rows (if any) */
+        .copy-btn {
+            background: white;
+            border: 1px solid #cbd5e1;
+            color: var(--text-light);
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+
+        .copy-btn:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .copy-btn:active {
+            transform: scale(0.95);
+        }
+
+        .copy-btn i {
+            font-size: 0.8rem;
+        }
+
+        /* Special Combined Button */
+        .copy-all-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-left: auto; /* Push to right */
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 6px rgba(37, 99, 235, 0.3);
+            transition: all 0.2s;
+        }
+
+        .copy-all-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 10px rgba(37, 99, 235, 0.4);
+        }
+        
+        /* Secondary color for "Select Copy" */
+        .copy-selected-btn {
+            background: var(--accent); /* Greenish for selection */
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3);
+            transition: all 0.2s;
+        }
+        
+        .copy-selected-btn:hover {
+            background: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 10px rgba(16, 185, 129, 0.4);
+        }
+
+        /* Canvas Mega Prompt */
+        .mega-prompt-box {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 25px;
+            border-radius: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            position: relative;
+            white-space: pre-wrap;
+            margin-bottom: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #475569;
+        }
+
+        .floating-copy {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(5px);
+        }
+
+        .floating-copy:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        /* Toast Notification */
+        #toast {
+            visibility: hidden;
+            min-width: 250px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 8px;
+            padding: 12px;
+            position: fixed;
+            z-index: 1000;
+            left: 50%;
+            bottom: 30px;
+            transform: translateX(-50%);
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        #toast.show {
+            visibility: visible;
+            animation: fadein 0.5s, fadeout 0.5s 2.5s;
+        }
+
+        @keyframes fadein {
+            from {bottom: 0; opacity: 0;}
+            to {bottom: 30px; opacity: 1;}
+        }
+
+        @keyframes fadeout {
+            from {bottom: 30px; opacity: 1;}
+            to {bottom: 0; opacity: 0;}
+        }
+
+        /* Step Colors */
+        .step-1 .section-badge { background: #6366f1; }
+        .step-2 .section-badge { background: #f59e0b; }
+        .step-3 .section-badge { background: #10b981; }
+
+    </style>
+</head>
+<body>
+
+<header>
+    <h1><i class="fa-solid fa-flask"></i> AI 研究與開發工具包</h1>
+    <p>NotebookLM + Gemini Canvas 實戰工作流</p>
+</header>
+
+<div class="container">
+
+    <!-- Step 1: Research Keywords -->
+    <div class="section step-1">
+        <div class="section-header">
+            <div class="section-badge">1</div>
+            <div class="section-title">
+                <h2>資料搜集：Research Keywords</h2>
+                <p>勾選需要的關鍵字，一次過複製並貼上到資料庫搜尋。</p>
+            </div>
+            <button class="copy-selected-btn" onclick="copySelectedKeywords()">
+                <i class="fa-regular fa-copy"></i> 複製已選項目
+            </button>
+        </div>
+
+        <div class="grid-cards">
+            <!-- Category A -->
+            <div class="keyword-group">
+                <h3><i class="fa-solid fa-layer-group"></i> A. AI 使用成熟度</h3>
+                <div class="copy-row" onclick="toggleRowCheckbox(this)">
+                    <input type="checkbox" class="keyword-checkbox" value="AI usage maturity model">
+                    <span class="prompt-text">AI usage maturity model (AI 使用成熟度模型)</span>
+                </div>
+                <div class="copy-row" onclick="toggleRowCheckbox(this)">
+                    <input type="checkbox" class="keyword-checkbox" value="AI adoption stages for individuals">
+                    <span class="prompt-text">AI adoption stages for individuals (個人 AI 應用階段)</span>
+                </div>
+                <div class="copy-row" onclick="toggleRowCheckbox(this)">
+                    <input type="checkbox" class="keyword-checkbox" value="AI proficiency levels framework">
+                    <span class="prompt-text">AI proficiency levels framework (AI 能力分級架構)</span>
+                </div>
+            </div>
+
+            <!-- Category B -->
+            <div class="keyword-group">
+                <h3><i class="fa-solid fa-book-open"></i> B. AI 素養 & 技能</h3>
+                <div class="copy-row" onclick="toggleRowCheckbox(this)">
+                    <input type="checkbox" class="keyword-checkbox" value="AI literacy framework definition">
+                    <span class="prompt-text">AI literacy framework definition (AI 素養定義)</span>
+                </div>
+                <div class="copy-row" onclick="toggleRowCheckbox(this)">
+                    <input type="checkbox" class="keyword-checkbox" value="prompt engineering skill progression">
+                    <span class="prompt-text">prompt engineering skill progression (提示工程技能進階)</span>
+                </div>
+                <div class="copy-row" onclick="toggleRowCheckbox(this)">
+                    <input type="checkbox" class="keyword-checkbox" value="human-AI collaboration models">
+                    <span class="prompt-text">human-AI collaboration models (人機協作模式)</span>
+                </div>
+            </div>
+
+            <!-- Category C -->
+            <div class="keyword-group">
+                <h3><i class="fa-solid fa-users-viewfinder"></i> C. 使用者行為</h3>
+                <div class="copy-row" onclick="toggleRowCheckbox(this)">
+                    <input type="checkbox" class="keyword-checkbox" value="how people use generative AI daily tasks">
+                    <span class="prompt-text">how people use generative AI daily tasks (人們日常如何使用生成式 AI)</span>
+                </div>
+                <div class="copy-row" onclick="toggleRowCheckbox(this)">
+                    <input type="checkbox" class="keyword-checkbox" value="common AI use cases students vs professionals">
+                    <span class="prompt-text">common AI use cases students vs professionals (學生與專業人士的常見 AI 用例)</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 2: NotebookLM Prompts -->
+    <div class="section step-2">
+        <div class="section-header">
+            <div class="section-badge">2</div>
+            <div class="section-title">
+                <h2>分析提問：Ask NotebookLM</h2>
+                <p>資料上傳後，請依序使用以下 Prompt 提問，讓 AI 幫你歸納出網站需要的邏輯。</p>
+            </div>
+            <button class="copy-all-btn" onclick="copyAllNotebookPrompts()">
+                <i class="fa-solid fa-layer-group"></i> 一次過複製所有 Prompt
+            </button>
+        </div>
+
+        <div class="grid-cards" style="grid-template-columns: 1fr;">
+            <div class="keyword-group" style="background: #fffbeb; border-color: #fcd34d;">
+                <h3><i class="fa-solid fa-comment-dots"></i> 1. 建立成熟度模型 (Maturity Model)</h3>
+                <div class="copy-row">
+                    <span class="prompt-text" id="nb-prompt-1">請根據所提供的來源資料，總結針對個人的不同「AI 使用成熟度模型 (AI usage maturity models)」。請重點關注人們如何從基礎使用進階到高級應用。基於這些分析，請提出一個適合用於自我評估測試的「5 級成熟度架構」 (例如：從探索者到構建者)。</span>
+                    <button class="copy-btn" onclick="copyText(this)">
+                        <i class="fa-regular fa-copy"></i> 複製
+                    </button>
+                </div>
+            </div>
+
+            <div class="keyword-group" style="background: #fffbeb; border-color: #fcd34d;">
+                <h3><i class="fa-solid fa-list-check"></i> 2. 轉化為行為特徵 (Behaviors)</h3>
+                <div class="copy-row">
+                    <span class="prompt-text" id="nb-prompt-2">針對你剛剛建立的「5 級架構」，請列出每個等級具體的、可觀察的「行為特徵」。該等級的使用者通常會用 AI 做什麼？他們會寫什麼樣的 Prompt？請將這些行為特徵轉化為一系列潛在的「測驗問題」。</span>
+                    <button class="copy-btn" onclick="copyText(this)">
+                        <i class="fa-regular fa-copy"></i> 複製
+                    </button>
+                </div>
+            </div>
+
+            <div class="keyword-group" style="background: #fffbeb; border-color: #fcd34d;">
+                <h3><i class="fa-solid fa-graduation-cap"></i> 3. 定義學習建議 (Next Steps)</h3>
+                <div class="copy-row">
+                    <span class="prompt-text" id="nb-prompt-3">針對這 5 個等級，請分別建議該等級的人「下一步應該學什麼」才能升級。請專注於具體的技能，例如提示工程 (Prompt Engineering)、工作流自動化 (Workflow Automation) 或程式編碼 (Coding)。</span>
+                    <button class="copy-btn" onclick="copyText(this)">
+                        <i class="fa-regular fa-copy"></i> 複製
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 3: Gemini Canvas Input -->
+    <div class="section step-3">
+        <div class="section-header">
+            <div class="section-badge">3</div>
+            <div class="section-title">
+                <h2>整合開發：Input for Gemini Canvas</h2>
+                <p>將 NotebookLM 的回答整理好後，複製這段指令到 Canvas，並在最後貼上你的研究結果。</p>
+            </div>
+        </div>
+
+        <div class="mega-prompt-box">
+            <button class="copy-btn floating-copy" onclick="copyText(this)">
+                <i class="fa-regular fa-copy"></i> Copy Prompt
+            </button>
+<span class="prompt-text">Hi Gemini, 我想建立一個單頁 HTML 互動式「AI 成熟度評估 (AI Maturity Assessment)」網站。
+
+請扮演資深 Web 開發人員和 AI 顧問的角色。
+
+**任務：** 建立一個現代化、響應式 (Responsive)、適合手機瀏覽的 HTML 檔案 (包含嵌入式 CSS/JS)，功能是一個性格/技能測試網頁。
+
+**需求：**
+1. **邏輯核心：** 使用我將在下方貼上的「5 級 AI 成熟度架構 (5-Level AI Maturity Framework)」。
+2. **測驗內容：** 根據下方的「行為特徵」建立 10-15 條單選題。計分邏輯應能將使用者歸類到 5 個等級中的其中一級。
+3. **結果頁面：**
+   - 顯示他們的等級 (例如：「Level 3: 操作者 The Operator」)。
+   - 顯示視覺化的進度條或雷達圖。
+   - 提供「下一步建議 (Next Steps)」：根據下方的「學習建議」提供具體的學習方向。
+4. **設計風格：** 使用乾淨、專業的「深色模式 (Dark Mode)」美學 (類似 Tailwind CSS 風格)。
+
+**以下是來自 NotebookLM 的研究內容 (Research Content)：**
+[請在此處貼上你的 NOTEBOOKLM 摘要結果]</span>
+        </div>
+        
+        <p style="text-align: center; color: var(--text-light); font-size: 0.9rem;">
+            <i class="fa-solid fa-arrow-up"></i> 點擊上方按鈕複製後，請貼到 Gemini Canvas 對話框，並記得把 `[請在此處貼上你的 NOTEBOOKLM 摘要結果]` 替換成你剛剛在 NotebookLM 查到的內容。
+        </p>
+    </div>
+
+</div>
+
+<!-- Toast Notification -->
+<div id="toast"><i class="fa-solid fa-check-circle"></i> 已複製到剪貼簿！</div>
+
+<script>
+    function copyText(button) {
+        // Find the span with class 'prompt-text' inside the same container or predefined content
+        const container = button.parentElement; // copy-row or mega-prompt-box
+        let textToCopy = "";
+        
+        // Special handling for the mega prompt box which puts button inside
+        if (container.classList.contains('mega-prompt-box')) {
+             textToCopy = container.querySelector('.prompt-text').innerText;
+        } else {
+             textToCopy = container.querySelector('.prompt-text').innerText;
+        }
+
+        copyToClipboard(textToCopy);
+    }
+
+    function toggleRowCheckbox(row) {
+        // Prevent toggling if the click target is the checkbox itself (let native behavior handle it)
+        if (event.target.type === 'checkbox') return;
+        
+        const checkbox = row.querySelector('.keyword-checkbox');
+        checkbox.checked = !checkbox.checked;
+    }
+
+    function copySelectedKeywords() {
+        const checkboxes = document.querySelectorAll('.keyword-checkbox:checked');
+        
+        if (checkboxes.length === 0) {
+            alert('請至少勾選一個關鍵字！');
+            return;
+        }
+
+        let combinedText = "";
+        checkboxes.forEach((cb) => {
+            // Find the text next to it to copy just the clean value (or prompt text)
+            // Here we copy the "value" of the checkbox which is cleaner (English only for search)
+            // Or if you prefer the full text: cb.nextElementSibling.innerText
+            combinedText += cb.nextElementSibling.innerText + "\n";
+        });
+
+        copyToClipboard(combinedText);
+    }
+
+    function copyAllNotebookPrompts() {
+        const p1 = document.getElementById('nb-prompt-1').innerText;
+        const p2 = document.getElementById('nb-prompt-2').innerText;
+        const p3 = document.getElementById('nb-prompt-3').innerText;
+
+        const combinedPrompt = `任務 1：${p1}\n\n任務 2：${p2}\n\n任務 3：${p3}`;
+        
+        copyToClipboard(combinedPrompt);
+    }
+
+    function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(() => {
+            showToast();
+        }).catch(err => {
+            console.error('Failed to copy: ', err);
+            // Fallback for older browsers
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            showToast();
+        });
+    }
+
+    function showToast() {
+        const toast = document.getElementById("toast");
+        toast.className = "show";
+        setTimeout(function(){ toast.className = toast.className.replace("show", ""); }, 3000);
+    }
+</script>
+
+</body>
+</html>
