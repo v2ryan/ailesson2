@@ -513,10 +513,75 @@
         .step-5 .section-badge {
             background: var(--game-purple);
         }
+
+        /* --- Top Nav --- */
+        .top-nav {
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 10px 20px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .top-nav a {
+            color: #cbd5e1;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            padding: 5px 12px;
+            border-radius: 6px;
+        }
+
+        .top-nav a:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .top-nav i {
+            font-size: 1rem;
+        }
+
+        @media (max-width: 600px) {
+            .top-nav {
+                flex-wrap: wrap;
+                gap: 5px;
+            }
+
+            .top-nav a span {
+                display: none;
+            }
+        }
     </style>
 </head>
 
 <body>
+
+    <nav class="top-nav">
+        <a href="https://notebooklm.google.com/" target="_blank">
+            <i class="fa-solid fa-book"></i> <span>NotebookLM</span>
+        </a>
+        <a href="https://gemini.google.com/app" target="_blank">
+            <i class="fa-solid fa-sparkles"></i> <span>Gemini</span>
+        </a>
+        <a href="https://docs.google.com/spreadsheets/u/0/" target="_blank">
+            <i class="fa-solid fa-file-excel"></i> <span>Google Sheets</span>
+        </a>
+        <a href="https://github.com/" target="_blank">
+            <i class="fa-brands fa-github"></i> <span>GitHub</span>
+        </a>
+        <a href="https://firebase.google.com/" target="_blank">
+            <i class="fa-solid fa-fire"></i> <span>Firebase</span>
+        </a>
+    </nav>
 
     <header>
         <h1><i class="fa-solid fa-flask"></i> AI 研究與開發工具包</h1>
@@ -715,7 +780,7 @@
                             <span class="file-name">jantojun.xlsx</span>
                         </div>
                         <!-- Update href with your actual GitHub link later -->
-                        <a href="https://github.com/your-repo/jantojun.xlsx" download class="download-btn">
+                        <a href="jantojun.xlsx" download class="download-btn">
                             <i class="fa-solid fa-download"></i> 下載檔案
                         </a>
                     </div>
@@ -747,7 +812,7 @@
                             <span class="file-name">address.xlsx</span>
                         </div>
                         <!-- Update href with your actual GitHub link later -->
-                        <a href="https://github.com/your-repo/address.xlsx" download class="download-btn">
+                        <a href="address.xlsx" download class="download-btn">
                             <i class="fa-solid fa-download"></i> 下載檔案
                         </a>
                     </div>
@@ -807,6 +872,34 @@
                         - 必須使用 ES Modules (`&lt;script type="module"&gt;`)。
                         - 確保資料庫寫入與讀取邏輯正確無誤。
                         - 包含簡易的 CSS 排版，讓遊戲與排行榜並排或上下排列。</span>
+                </div>
+
+                <div class="mega-prompt-box">
+                    <button class="copy-btn floating-copy" onclick="copyText(this)">
+                        <i class="fa-regular fa-copy"></i> Copy Rules
+                    </button>
+                    <div
+                        style="color: #94a3b8; margin-bottom: 15px; font-family: 'Noto Sans TC', sans-serif; line-height: 1.5;">
+                        <strong style="color: #f87171;">場景一：開發測試模式 (Test Mode) - ⚠️ 極度危險</strong><br>
+                        剛開始開發時，你可能不想處理權限問題，想讓所有人都讀寫數據。<br>
+                        <small>注意： 這就像你出門不鎖門，任何人都可以入來搬走你屋企啲嘢。千祈唔好在正式版 (Production) 使用！</small>
+                    </div>
+                    <span class="prompt-text">rules_version = '2';
+
+                        service cloud.firestore {
+                        match /databases/{database}/documents {
+
+                        // This rule allows anyone with your Firestore database reference to view, edit,
+                        // and delete all data in your Firestore database. It is useful for getting
+                        // started, but it is configured to expire after 30 days because it
+                        // leaves your app open to attackers. At that time, all client
+                        // requests to your Firestore database will be denied.
+                        //
+                        // Make sure to write security rules for your app before that time, or else
+                        // all client requests to your Firestore database will be denied until you Update
+                        // your rules
+                        match /{document=**} {
+                        allow read, write: if request.time < timestamp.date(2026, 2, 22); } } }</span>
                 </div>
             </div>
 
